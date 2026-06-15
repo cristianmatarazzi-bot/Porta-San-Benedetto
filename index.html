@@ -1,33 +1,27 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Corteo Storico 2026 — Porta San Benedetto</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 120'%3E%3Cpath d='M5 5h90v60q0 35-45 50Q5 100 5 65z' fill='%23F3D231' stroke='%23C9A622' stroke-width='4'/%3E%3Crect x='12' y='12' width='76' height='40' fill='%2334509E'/%3E%3Cpath d='M12 68l38-14 38 14v12l-38-14-38 14zM12 92l38-14 38 14v10l-38-14-38 14z' fill='%2334509E'/%3E%3C/svg%3E" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 120'%3E%3Cpath d='M5 5h90v60q0 35-45 50Q5 100 5 65z' fill='%23F3D231' stroke='%23C9A622' stroke-width='4'/%3E%3Crect x='12' y='12' width='76' height='40' fill='%2334509E'/%3E%3C/svg%3E"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-  html, body { margin: 0; padding: 0; }
-  #root { min-height: 100vh; }
+html,body{margin:0;padding:0;}#root{min-height:100vh;}
+@media print{body *{visibility:hidden!important;}.area-stampa,.area-stampa *{visibility:visible!important;}.area-stampa{position:absolute!important;inset:0!important;width:100%!important;background:#FFF!important;}.no-stampa{display:none!important;}}
 </style>
 </head>
 <body>
 <div id="root"></div>
-
 <script type="module">
-// ── Imports ESM: React, ReactDOM, Firebase ──────────────────────
-import { default as React } from "https://esm.sh/react@18.3.1";
-import { createRoot }       from "https://esm.sh/react-dom@18.3.1/client";
-import { initializeApp }    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import React from "https://esm.sh/react@18.3.1";
+import { createRoot } from "https://esm.sh/react-dom@18.3.1/client";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getDatabase, ref, set, remove, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 const { useState, useEffect, useCallback } = React;
-// Rendi React globale per createElement usato dal codice compilato
-window.React = React;
 
-// ── Configurazione ───────────────────────────────────────────────
 const PASSWORD_APP = "Benedetto2026";
-
 const firebaseConfig = {
   apiKey: "AIzaSyAqK6cHiwNDZc7a6uiT-RStIzj37EkLBHI",
   authDomain: "porta-san-benedetto.firebaseapp.com",
@@ -37,81 +31,41 @@ const firebaseConfig = {
   messagingSenderId: "186326873116",
   appId: "1:186326873116:web:61d7bcde2577ac9283dbd9",
 };
-const COLLEZIONE = "corteo-psb-2026";
+const COLLEZIONE   = "corteo-psb-2026";
+const COLL_TESSERE = "tessere-psb-2026";
 
-const firebaseApp = initializeApp(firebaseConfig);
-const db_root = getDatabase(firebaseApp);
-
-// Wrapper db compatibile con il codice esistente
+const _fbApp = initializeApp(firebaseConfig);
+const _fbDb  = getDatabase(_fbApp);
 const db = {
   ref: (path) => {
-    const r = ref(db_root, path);
-    const unsubs = [];
+    const r = ref(_fbDb, path);
+    const subs = [];
     return {
-      on: (evt, cb, errCb) => {
-        const unsub = onValue(r, cb, errCb || (() => {}));
-        unsubs.push(unsub);
-        return unsub;
-      },
-      off: (evt, cb) => { unsubs.forEach(fn => fn && fn()); },
-      set: (val) => set(r, val),
-      remove: () => remove(r),
+      on:     (_, cb, err) => { const u = onValue(r, cb, err||(()=>{})); subs.push(u); return u; },
+      off:    ()           => subs.forEach(u => u&&u()),
+      set:    (v)          => set(r, v),
+      remove: ()           => remove(r),
     };
   }
 };
 
-// useState, useEffect, useCallback importati sopra
+function faIcona(p){return function I({size=16,color="currentColor",style}){return React.createElement("svg",{width:size,height:size,viewBox:"0 0 24 24",fill:"none",stroke:color,strokeWidth:"2",strokeLinecap:"round",strokeLinejoin:"round",style:{flexShrink:0,...style},dangerouslySetInnerHTML:{__html:p}});};}
+const UserPlus=faIcona('<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" x2="19" y1="8" y2="14"/><line x1="22" x2="16" y1="11" y2="11"/>');
+const Download=faIcona('<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>');
+const Trash2=faIcona('<path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/>');
+const Pencil=faIcona('<path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>');
+const Search=faIcona('<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>');
+const Phone=faIcona('<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>');
+const Mail=faIcona('<rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>');
+const Ruler=faIcona('<path d="M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.3 8.7a2.41 2.41 0 0 1 0-3.4l2.6-2.6a2.41 2.41 0 0 1 3.4 0Z"/><path d="m14.5 12.5 2-2"/><path d="m11.5 9.5 2-2"/><path d="m8.5 6.5 2-2"/><path d="m17.5 15.5 2-2"/>');
+const Scissors=faIcona('<circle cx="6" cy="6" r="3"/><path d="M8.12 8.12 12 12"/><path d="M20 4 8.12 15.88"/><circle cx="6" cy="18" r="3"/><path d="M14.8 14.8 20 20"/>');
+const X=faIcona('<path d="M18 6 6 18"/><path d="m6 6 12 12"/>');
+const Save=faIcona('<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>');
+const ScrollText=faIcona('<path d="M8 21h12a2 2 0 0 0 2-2v-2H10v2a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v3h4"/><path d="M19 17V5a2 2 0 0 0-2-2H4"/><path d="M15 8h-5"/><path d="M15 12h-5"/>');
+const Printer=faIcona('<polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/>');
+const Users=faIcona('<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>');
+const Send=faIcona('<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>');
 
-
-// ╔════════════════════════════════════════════════════════════════╗
-// ║  CONFIGURAZIONE — MODIFICA SOLO QUESTO RIQUADRO                ║
-// ╚════════════════════════════════════════════════════════════════╝
-
-// (configurazione già definita nel modulo ESM)
-
-// (init Firebase e db gestiti sopra nel modulo ESM)
-
-// ---- Icone (tracciati Lucide incorporati) ----
-function faIcona(percorsi) {
-  return function Icona({
-    size = 16,
-    color = "currentColor",
-    style
-  }) {
-    return /*#__PURE__*/React.createElement("svg", {
-      width: size,
-      height: size,
-      viewBox: "0 0 24 24",
-      fill: "none",
-      stroke: color,
-      strokeWidth: "2",
-      strokeLinecap: "round",
-      strokeLinejoin: "round",
-      style: {
-        flexShrink: 0,
-        ...style
-      },
-      dangerouslySetInnerHTML: {
-        __html: percorsi
-      }
-    });
-  };
-}
-const UserPlus = faIcona('<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" x2="19" y1="8" y2="14"/><line x1="22" x2="16" y1="11" y2="11"/>');
-const Download = faIcona('<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>');
-const Trash2 = faIcona('<path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/>');
-const Pencil = faIcona('<path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>');
-const Search = faIcona('<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>');
-const Phone = faIcona('<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>');
-const Mail = faIcona('<rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>');
-const Ruler = faIcona('<path d="M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.3 8.7a2.41 2.41 0 0 1 0-3.4l2.6-2.6a2.41 2.41 0 0 1 3.4 0Z"/><path d="m14.5 12.5 2-2"/><path d="m11.5 9.5 2-2"/><path d="m8.5 6.5 2-2"/><path d="m17.5 15.5 2-2"/>');
-const Scissors = faIcona('<circle cx="6" cy="6" r="3"/><path d="M8.12 8.12 12 12"/><path d="M20 4 8.12 15.88"/><circle cx="6" cy="18" r="3"/><path d="M14.8 14.8 20 20"/>');
-const X = faIcona('<path d="M18 6 6 18"/><path d="m6 6 12 12"/>');
-const Save = faIcona('<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>');
-const ScrollText = faIcona('<path d="M8 21h12a2 2 0 0 0 2-2v-2H10v2a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v3h4"/><path d="M19 17V5a2 2 0 0 0-2-2H4"/><path d="M15 8h-5"/><path d="M15 12h-5"/>');
-const Printer = faIcona('<polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/>');
-const Users = faIcona('<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>');
-const Send = faIcona('<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>');
 const STEMMA_ORO = "M112.0,224.5 108.0,224.5 87.0,216.5 64.0,203.5 44.5,186.0 35.5,174.0 29.5,163.0 23.5,142.0 23.5,29.0 25.0,27.5 194.0,27.5 195.5,29.0 195.5,142.0 189.5,163.0 176.5,184.0 158.0,201.5 139.0,213.5 112.0,224.5Z M193.5,116.0 193.0,29.5 25.5,30.0 26.0,116.5 74.0,116.5 72.5,111.0 70.0,108.5 63.0,107.5 60.0,110.5 58.0,105.5 55.5,107.0 55.5,111.0 53.0,114.5 45.0,114.5 51.5,110.0 51.5,108.0 47.0,104.5 42.0,105.5 32.0,115.5 31.5,108.0 33.5,105.0 39.0,101.5 42.0,101.5 43.5,99.0 41.0,96.5 36.0,95.5 33.0,90.5 29.5,90.0 38.0,86.5 41.5,89.0 44.0,93.5 47.0,93.5 48.5,90.0 47.5,88.0 38.5,78.0 46.0,78.5 50.5,83.0 50.5,89.0 53.5,95.0 60.0,98.5 64.0,98.5 69.0,96.5 74.0,91.5 80.0,89.5 82.5,85.0 89.0,78.5 95.0,75.5 103.0,75.5 111.0,79.5 118.0,78.5 121.5,75.0 118.5,73.0 120.5,70.0 118.0,67.5 109.0,68.5 108.0,70.5 98.5,65.0 100.0,59.5 105.0,63.5 111.0,63.5 113.5,61.0 112.5,57.0 104.0,52.5 98.0,53.5 94.5,48.0 95.0,46.5 103.0,46.5 116.0,39.5 131.0,39.5 132.0,40.5 149.0,39.5 149.5,41.0 145.5,45.0 149.0,47.5 152.5,48.0 149.0,51.5 143.5,53.0 147.0,55.5 150.5,56.0 145.5,60.0 155.5,70.0 154.0,70.5 149.0,67.5 146.5,68.0 153.5,78.0 153.0,79.5 149.5,79.0 152.5,92.0 148.0,91.5 143.5,101.0 133.5,107.0 131.5,111.0 132.0,116.5 148.0,116.5 147.5,111.0 149.5,105.0 155.0,99.5 166.0,96.5 173.5,89.0 179.5,78.0 180.5,60.0 177.0,56.5 172.0,58.5 161.0,66.5 156.0,66.5 153.5,64.0 152.5,62.0 153.5,56.0 157.5,51.0 160.0,43.5 163.0,45.5 165.0,43.5 168.0,43.5 166.5,49.0 168.5,51.0 162.0,53.5 157.5,59.0 157.5,62.0 162.0,61.5 173.0,53.5 180.0,52.5 184.5,57.0 185.5,60.0 185.5,74.0 176.5,92.0 170.0,98.5 160.0,103.5 156.5,107.0 154.5,111.0 154.5,115.0 156.0,116.5 193.5,116.0Z M73.0,88.5 70.5,87.0 70.5,83.0 72.5,79.0 71.0,76.5 67.5,76.0 67.0,72.5 61.0,75.5 54.5,72.0 60.0,69.5 64.5,70.0 63.5,66.0 59.0,60.5 43.5,61.0 49.0,54.5 52.0,54.5 55.0,56.5 58.0,56.5 59.5,55.0 58.5,51.0 53.5,46.0 55.5,43.0 54.0,38.5 57.0,39.5 62.5,45.0 63.5,51.0 66.0,53.5 69.5,51.0 68.5,45.0 72.5,40.0 72.0,38.5 74.5,40.0 76.5,45.0 72.5,53.0 72.5,57.0 75.5,64.0 83.5,72.0 85.5,77.0 73.0,88.5Z M114.5,50.0 121.5,45.0 114.0,45.5 112.5,47.0 114.5,50.0Z M87.0,65.5 82.5,65.0 86.0,63.5 87.5,60.0 80.0,56.5 77.5,54.0 78.0,51.5 84.0,55.5 96.0,55.5 97.5,57.0 94.0,57.5 91.5,60.0 91.5,62.0 87.0,65.5Z M174.5,183.0 182.5,172.0 189.5,158.0 111.0,117.5 29.5,158.0 36.5,172.0 45.0,182.5 110.0,150.5 174.5,183.0Z M134.5,213.0 150.0,204.5 164.5,193.0 110.0,164.5 54.5,193.0 66.0,202.5 85.0,213.5 109.0,201.5 133.0,213.5 134.5,213.0Z";
 const STEMMA_BLU = "M193.0,116.5 156.0,116.5 154.5,115.0 154.5,111.0 156.5,107.0 160.0,103.5 170.0,98.5 176.5,92.0 185.5,74.0 185.5,60.0 184.5,57.0 180.0,52.5 173.0,53.5 162.0,61.5 157.5,62.0 157.5,59.0 160.5,55.0 165.0,51.5 168.5,51.0 166.5,49.0 168.0,43.5 165.0,43.5 163.0,45.5 161.0,43.5 159.5,44.0 159.5,47.0 153.5,56.0 152.5,62.0 156.0,66.5 161.0,66.5 176.0,56.5 180.5,60.0 180.5,74.0 175.5,86.0 166.0,96.5 155.0,99.5 149.5,105.0 147.5,111.0 148.0,116.5 131.5,116.0 131.5,111.0 133.5,107.0 143.5,101.0 148.0,91.5 152.5,92.0 149.5,79.0 153.0,79.5 153.5,78.0 146.5,68.0 149.0,67.5 154.0,70.5 155.5,70.0 145.5,60.0 150.5,56.0 147.0,55.5 143.5,53.0 149.0,51.5 152.5,48.0 149.0,47.5 145.5,45.0 149.5,40.0 132.0,40.5 131.0,39.5 116.0,39.5 103.0,46.5 94.5,47.0 98.0,53.5 104.0,52.5 112.5,57.0 113.5,61.0 111.0,63.5 105.0,63.5 100.0,59.5 98.5,65.0 108.0,70.5 109.0,68.5 118.0,67.5 120.5,70.0 118.5,73.0 121.5,75.0 116.0,79.5 111.0,79.5 103.0,75.5 95.0,75.5 89.0,78.5 82.5,85.0 80.0,89.5 74.0,91.5 69.0,96.5 64.0,98.5 60.0,98.5 53.5,95.0 50.5,89.0 50.5,83.0 46.0,78.5 38.5,78.0 47.5,88.0 48.5,90.0 47.0,93.5 44.0,93.5 41.5,89.0 38.0,86.5 29.5,90.0 33.0,90.5 36.0,95.5 41.0,96.5 43.5,99.0 42.0,101.5 39.0,101.5 33.5,105.0 31.5,108.0 32.0,115.5 42.0,105.5 47.0,104.5 51.5,108.0 51.5,110.0 45.0,114.5 53.0,114.5 55.5,111.0 55.5,107.0 58.0,105.5 60.0,110.5 63.0,107.5 70.0,108.5 72.5,111.0 74.0,116.5 26.0,116.5 25.5,30.0 193.0,29.5 193.0,116.5Z M73.5,88.0 85.5,77.0 83.5,72.0 75.5,64.0 72.5,57.0 72.5,53.0 76.5,45.0 74.5,40.0 72.0,38.5 72.5,40.0 68.5,45.0 69.5,51.0 66.0,53.5 63.5,51.0 62.5,45.0 57.0,39.5 54.0,38.5 55.5,43.0 53.5,46.0 58.5,51.0 59.5,55.0 58.0,56.5 55.0,56.5 52.0,54.5 49.0,54.5 43.5,61.0 59.0,60.5 63.5,66.0 64.5,70.0 60.0,69.5 54.5,72.0 61.0,75.5 67.0,72.5 67.5,76.0 71.0,76.5 72.5,79.0 70.5,83.0 70.5,87.0 72.0,88.5 73.5,88.0Z M114.0,50.5 112.5,47.0 114.0,45.5 121.5,45.0 114.0,50.5Z M87.5,65.0 91.5,62.0 91.5,60.0 94.0,57.5 97.5,57.0 96.0,55.5 84.0,55.5 78.0,51.5 77.5,54.0 80.0,56.5 87.5,60.0 86.0,63.5 82.5,65.0 87.5,65.0Z M174.0,183.5 110.0,150.5 45.0,182.5 36.5,172.0 29.5,158.0 111.0,117.5 189.5,158.0 182.5,172.0 174.0,183.5Z M134.0,213.5 111.0,201.5 85.0,213.5 66.0,202.5 54.5,193.0 110.0,164.5 164.5,193.0 156.0,200.5 134.0,213.5Z";
 function Stemma({
@@ -1755,7 +1709,7 @@ function ModuloStampa({
 // ==================================================================
 // APP PRINCIPALE
 // ==================================================================
-function CorteoApp() {
+export default function CorteoApp() {
   const [iscritti, setIscritti] = useState([]);
   const [giorno, setGiorno] = useState("venerdi");
   const [form, setForm] = useState(EMPTY);
@@ -1766,35 +1720,31 @@ function CorteoApp() {
   const [errore, setErrore] = useState("");
   const [stampaId, setStampaId] = useState(null);
   useEffect(() => {
-    const rif = db.ref(COLLEZIONE);
-    const cb = rif.on("value", snap => {
-      const dati = snap.val() || {};
-      const lista = Object.keys(dati).map(k => ({
-        ...dati[k],
-        id: k
-      }));
-      lista.sort((a, b) => (a.creato || 0) - (b.creato || 0));
-      setIscritti(lista);
-      setCaricamento(false);
-    }, e => {
-      setErrore("Connessione al registro non riuscita: verifica le regole del database Firebase.");
-      setCaricamento(false);
-    });
-    return () => rif.off("value", cb);
+    (async () => {
+      try {
+        const res = await window.storage.get(STORAGE_KEY, true);
+        if (res && res.value) {
+          let lista = JSON.parse(res.value);
+          // migrazione: i vecchi iscritti senza giorno vanno nel sabato (corteo principale)
+          lista = lista.map(p => p.giorno ? p : {
+            ...p,
+            giorno: "sabato"
+          });
+          setIscritti(lista);
+        }
+      } catch (e) {
+        // registro vuoto al primo avvio
+      } finally {
+        setCaricamento(false);
+      }
+    })();
   }, []);
-  const salvaPersona = useCallback(async p => {
+  const salva = useCallback(async lista => {
+    setIscritti(lista);
     try {
-      await db.ref(COLLEZIONE + "/" + p.id).set(p);
+      await window.storage.set(STORAGE_KEY, JSON.stringify(lista), true);
     } catch (e) {
       setErrore("Salvataggio non riuscito. Riprova.");
-      setTimeout(() => setErrore(""), 4000);
-    }
-  }, []);
-  const eliminaPersona = useCallback(async id => {
-    try {
-      await db.ref(COLLEZIONE + "/" + id).remove();
-    } catch (e) {
-      setErrore("Eliminazione non riuscita. Riprova.");
       setTimeout(() => setErrore(""), 4000);
     }
   }, []);
@@ -1829,22 +1779,19 @@ function CorteoApp() {
       telefono: normalizzaTelefono(form.telefono)
     };
     if (editId) {
-      const orig = iscritti.find(p => p.id === editId);
-      salvaPersona({
+      salva(iscritti.map(p => p.id === editId ? {
         ...dati,
         id: editId,
-        giorno: orig ? orig.giorno : giorno,
-        creato: orig && orig.creato || Date.now()
-      });
+        giorno: p.giorno
+      } : p));
       setEditId(null);
       mostraAvviso("Iscritto aggiornato.");
     } else {
-      salvaPersona({
+      salva([...iscritti, {
         ...dati,
         id: Date.now().toString(36),
-        giorno,
-        creato: Date.now()
-      });
+        giorno
+      }]);
       mostraAvviso(`${form.nome} ${form.cognome} iscritto a ${GIORNI[giorno].tab}.`);
     }
     setForm(EMPTY);
@@ -1867,14 +1814,13 @@ function CorteoApp() {
   const elimina = id => {
     const p = iscritti.find(x => x.id === id);
     if (!window.confirm(`Eliminare ${p.nome} ${p.cognome} dall'elenco di ${GIORNI[p.giorno].tab}?`)) return;
-    eliminaPersona(id);
+    salva(iscritti.filter(x => x.id !== id));
   };
   const toggle = (id, campo) => {
-    const p = iscritti.find(x => x.id === id);
-    if (p) salvaPersona({
+    salva(iscritti.map(p => p.id === id ? {
       ...p,
       [campo]: !p[campo]
-    });
+    } : p));
   };
 
   // ---- export Excel: un foglio per ogni giorno ----
@@ -2169,14 +2115,14 @@ function CorteoApp() {
     style: inputStyle,
     value: form.nome,
     onChange: onChange("nome"),
-    placeholder: "Es. Mario"
+    placeholder: "Es. Lavinia"
   })), /*#__PURE__*/React.createElement(Field, {
     label: "Cognome *"
   }, /*#__PURE__*/React.createElement("input", {
     style: inputStyle,
     value: form.cognome,
     onChange: onChange("cognome"),
-    placeholder: "Es. Rossi"
+    placeholder: "Es. Forlini"
   })), /*#__PURE__*/React.createElement(Field, {
     label: "Sesso"
   }, /*#__PURE__*/React.createElement("select", {
@@ -2210,7 +2156,7 @@ function CorteoApp() {
     key: n,
     value: n
   })))), /*#__PURE__*/React.createElement(Field, {
-    label: "Cod. fiscale (automatico)"
+    label: "Codice fiscale (automatico)"
   }, /*#__PURE__*/React.createElement("input", {
     style: {
       ...inputStyle,
@@ -2771,7 +2717,7 @@ function CorteoApp() {
       fontSize: 14,
       marginTop: 10
     }
-  }, "Porta San Benedetto \u2014 Gualdo Tadino \xB7 Registro condiviso: i dati si sincronizzano in tempo reale su tutti i dispositivi"))), daStampare && /*#__PURE__*/React.createElement("div", {
+  }, "Porta San Benedetto \u2014 Gualdo Tadino \xB7 I dati sono salvati nel registro condiviso dell'app"))), daStampare && /*#__PURE__*/React.createElement("div", {
     style: {
       position: "fixed",
       inset: 0,
@@ -2873,123 +2819,989 @@ function CorteoApp() {
 }
 
 // ==================================================================
-// SCHERMATA DI ACCESSO CON PAROLA D'ORDINE
+// SEZIONE TESSERAMENTO
 // ==================================================================
-function SchermataAccesso({
-  onSblocco
+const EMPTY_T = {
+  gNome: "",
+  gNatoA: "",
+  gNatoIl: "",
+  gResidenza: "",
+  gVia: "",
+  gProv: "",
+  gCF: "",
+  gTel: "",
+  gMail: "",
+  mNome: "",
+  mCognome: "",
+  mNatoA: "",
+  mNatoIl: "",
+  tipo: "telematica",
+  tesseraN: "",
+  accettata: false
+};
+function ModuloTesseraPrint({
+  p
 }) {
-  const [pwd, setPwd] = useState("");
-  const [err, setErr] = useState(false);
-  const prova = () => {
-    if (pwd === PASSWORD_APP) onSblocco();else {
-      setErr(true);
-      setPwd("");
+  const oggi = oggiIT();
+  const Riga = ({
+    v,
+    w = 160
+  }) => /*#__PURE__*/React.createElement("span", {
+    style: {
+      display: "inline-block",
+      minWidth: w,
+      borderBottom: "1px solid #000",
+      padding: "0 3px",
+      fontWeight: 600
     }
+  }, v || "\u00A0");
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "#FFF",
+      color: "#000",
+      padding: "28px 34px",
+      fontFamily: "Georgia,'Times New Roman',serif",
+      fontSize: 11,
+      lineHeight: 1.4,
+      maxWidth: 760,
+      margin: "0 auto"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 14,
+      marginBottom: 10
+    }
+  }, /*#__PURE__*/React.createElement(Stemma, {
+    width: 56
+  }), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: "'Cinzel',serif",
+      fontSize: 18,
+      fontWeight: 700
+    }
+  }, "ASS. PORTA SAN BENEDETTO Aps"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 13,
+      fontWeight: 700,
+      marginTop: 2
+    }
+  }, "Richiesta di tesseramento 2026 (art. 5 e seguenti Statuto)"))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      justifyContent: "flex-end",
+      marginBottom: 8,
+      fontSize: 13,
+      fontWeight: 700
+    }
+  }, "TESSERA N.\xA0", /*#__PURE__*/React.createElement(Riga, {
+    v: p.tesseraN,
+    w: 80
+  }), "\xA0\xA0\xA0TELEMATICA\xA0", /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 16
+    }
+  }, p.tipo === "telematica" ? "☒" : "☐"), "\xA0FISICA\xA0", /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 16
+    }
+  }, p.tipo === "fisica" ? "☒" : "☐")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      lineHeight: 2
+    }
+  }, /*#__PURE__*/React.createElement("div", null, "Il/la sottoscritto/a:\xA0", /*#__PURE__*/React.createElement(Riga, {
+    v: p.gNome,
+    w: 220
+  }), " Nato/a a:\xA0", /*#__PURE__*/React.createElement(Riga, {
+    v: p.gNatoA,
+    w: 130
+  }), " il\xA0", /*#__PURE__*/React.createElement(Riga, {
+    v: dataIT(p.gNatoIl),
+    w: 90
+  })), /*#__PURE__*/React.createElement("div", null, "Residente a:\xA0", /*#__PURE__*/React.createElement(Riga, {
+    v: p.gResidenza,
+    w: 140
+  }), " in Via:\xA0", /*#__PURE__*/React.createElement(Riga, {
+    v: p.gVia,
+    w: 190
+  }), " Prov.:\xA0", /*#__PURE__*/React.createElement(Riga, {
+    v: p.gProv,
+    w: 36
+  })), /*#__PURE__*/React.createElement("div", null, "Codice Fiscale:\xA0", /*#__PURE__*/React.createElement(Riga, {
+    v: p.gCF,
+    w: 260
+  })), /*#__PURE__*/React.createElement("div", null, "Tel.\xA0", /*#__PURE__*/React.createElement(Riga, {
+    v: p.gTel,
+    w: 150
+  }), "\xA0\xA0Mail:\xA0", /*#__PURE__*/React.createElement(Riga, {
+    v: p.gMail,
+    w: 210
+  }))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: "center",
+      fontWeight: 700,
+      fontSize: 13,
+      margin: "10px 0 4px"
+    }
+  }, "in qualit\xE0 di genitore/tutore del minore"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      lineHeight: 2
+    }
+  }, "Nome\xA0", /*#__PURE__*/React.createElement(Riga, {
+    v: p.mNome,
+    w: 140
+  }), " Cognome\xA0", /*#__PURE__*/React.createElement(Riga, {
+    v: p.mCognome,
+    w: 150
+  }), " Nato/a a\xA0", /*#__PURE__*/React.createElement(Riga, {
+    v: p.mNatoA,
+    w: 130
+  }), " il\xA0", /*#__PURE__*/React.createElement(Riga, {
+    v: dataIT(p.mNatoIl),
+    w: 90
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: "center",
+      fontWeight: 700,
+      fontSize: 16,
+      margin: "12px 0 4px"
+    }
+  }, "FA RICHIESTA"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 10,
+      textAlign: "justify",
+      marginBottom: 10
+    }
+  }, "di essere ammesso quale socio dell'associazione Porta San Benedetto e di impegnarsi a rispettare le disposizioni statutarie vigenti e le delibere degli organi sociali validamente costituiti. A tale scopo dichiara di conoscere e accettare lo statuto sociale."), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      marginBottom: 6
+    }
+  }, "Data della richiesta,\xA0", /*#__PURE__*/React.createElement(Riga, {
+    v: oggi,
+    w: 110
+  }), "\xA0\xA0 Firma\xA0", /*#__PURE__*/React.createElement("span", {
+    style: {
+      display: "inline-block",
+      minWidth: 200,
+      borderBottom: "1px solid #000"
+    }
+  }, "\xA0")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      marginBottom: 14
+    }
+  }, "Il Comitato in data\xA0", /*#__PURE__*/React.createElement(Riga, {
+    v: "",
+    w: 90
+  }), "\xA0\xA0 Accetta\xA0", /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 16
+    }
+  }, p.accettata ? "☒" : "☐"), "\xA0Nega\xA0", /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 16
+    }
+  }, p.accettata ? "☐" : "☒")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 8,
+      textAlign: "justify",
+      borderTop: "1px solid #999",
+      paddingTop: 6
+    }
+  }, /*#__PURE__*/React.createElement("strong", null, "GDPR"), " - In ottemperanza al Regolamento Europeo per la Privacy 2016/679 (GDPR) l'Associazione Porta San Benedetto, CF 92008010545, P.IVA 02751240546, informa che i dati personali saranno trattati nel rispetto della normativa vigente per le finalit\xE0 statutarie, obblighi di legge e adempimenti verso l'Ente Giochi de le Porte. Diritti ex artt. 15 ss. GDPR: Ass. Porta San Benedetto, Via Soprammuro 1, 06023 Gualdo Tadino (PG) \u2014 ass.portasanbenedetto@gmail.com."), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11,
+      marginTop: 8
+    }
+  }, "Gualdo Tadino\xA0", /*#__PURE__*/React.createElement(Riga, {
+    v: oggi,
+    w: 110
+  }), "\xA0\xA0 Firma dell'interessato\xA0", /*#__PURE__*/React.createElement("span", {
+    style: {
+      display: "inline-block",
+      minWidth: 220,
+      borderBottom: "1px solid #000"
+    }
+  }, "\xA0")));
+}
+function SezioneTestera() {
+  const [tesserati, setTesserati] = useState([]);
+  const [caricamentoTes, setCaricamentoTes] = useState(true);
+  const [formTes, setFormTes] = useState(EMPTY_T);
+  const [editTesId, setEditTesId] = useState(null);
+  const [filtroTes, setFiltroTes] = useState("");
+  const [stampaTes, setStampaTes] = useState(null);
+  const [errTes, setErrTes] = useState("");
+  const [avvisoTes, setAvvisoTes] = useState("");
+  useEffect(() => {
+    const rifTes = db.ref(COLL_TESSERE);
+    const cbTes = rifTes.on("value", snap => {
+      const datiTes = snap.val() || {};
+      const listaTes = Object.keys(datiTes).map(k => ({
+        ...datiTes[k],
+        id: k
+      }));
+      listaTes.sort((a, b) => (a.creato || 0) - (b.creato || 0));
+      setTesserati(listaTes);
+      setCaricamentoTes(false);
+    }, () => setCaricamentoTes(false));
+    return () => rifTes.off("value", cbTes);
+  }, []);
+  const mostraAvvisoTes = msg => {
+    setAvvisoTes(msg);
+    setTimeout(() => setAvvisoTes(""), 3000);
+  };
+  const onChangeTes = campo => e => setFormTes(f => ({
+    ...f,
+    [campo]: e.target.value
+  }));
+  const salvaTes = useCallback(async rec => {
+    try {
+      await db.ref(COLL_TESSERE + "/" + rec.id).set(rec);
+    } catch {
+      setErrTes("Salvataggio non riuscito.");
+      setTimeout(() => setErrTes(""), 4000);
+    }
+  }, []);
+  const eliminaTes = async id => {
+    try {
+      await db.ref(COLL_TESSERE + "/" + id).remove();
+    } catch {
+      setErrTes("Eliminazione non riuscita.");
+      setTimeout(() => setErrTes(""), 4000);
+    }
+  };
+  const inviaFormTes = () => {
+    if (!formTes.gNome.trim()) {
+      setErrTes("Il nome del genitore è obbligatorio.");
+      setTimeout(() => setErrTes(""), 4000);
+      return;
+    }
+    const recTes = {
+      ...formTes,
+      gTel: normalizzaTelefono(formTes.gTel)
+    };
+    if (editTesId) {
+      const orig = tesserati.find(t => t.id === editTesId);
+      salvaTes({
+        ...recTes,
+        id: editTesId,
+        creato: orig && orig.creato || Date.now()
+      });
+      setEditTesId(null);
+      mostraAvvisoTes("Tesserato aggiornato.");
+    } else {
+      salvaTes({
+        ...recTes,
+        id: Date.now().toString(36),
+        creato: Date.now()
+      });
+      mostraAvvisoTes(`${formTes.gNome} registrato.`);
+    }
+    setFormTes(EMPTY_T);
+  };
+  const visibiliTes = tesserati.filter(t => (t.gNome + " " + t.mNome + " " + t.mCognome).toLowerCase().includes(filtroTes.toLowerCase()));
+  const accettati = tesserati.filter(t => t.accettata).length;
+  const daStar = tesserati.find(t => t.id === stampaTes);
+  const inpS = {
+    width: "100%",
+    boxSizing: "border-box",
+    background: "#FFFDF5",
+    border: `1.5px solid ${C.oroScuro}`,
+    borderRadius: 4,
+    padding: "10px 12px",
+    fontFamily: "'EB Garamond',Georgia,serif",
+    fontSize: 16,
+    color: C.inchiostro,
+    outline: "none"
   };
   return /*#__PURE__*/React.createElement("div", {
     style: {
-      minHeight: "100vh",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      padding: 20,
-      background: "repeating-linear-gradient(135deg, rgba(243,210,49,0.045) 0 18px, transparent 18px 36px), linear-gradient(180deg, #1A2B5C 0%, #34509E 55%, #243A78 100%)",
-      fontFamily: "'EB Garamond', Georgia, serif"
+      paddingBottom: 60
     }
-  }, /*#__PURE__*/React.createElement("style", null, "@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=EB+Garamond:ital@0;1&display=swap');"), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("header", {
     style: {
       textAlign: "center",
-      maxWidth: 380,
-      width: "100%"
+      padding: "28px 16px 14px"
     }
   }, /*#__PURE__*/React.createElement(Stemma, {
-    width: 120,
+    width: 80,
     style: {
-      filter: "drop-shadow(0 6px 14px rgba(0,0,0,0.45))"
+      filter: "drop-shadow(0 4px 10px rgba(0,0,0,0.4))"
     }
   }), /*#__PURE__*/React.createElement("div", {
     style: {
-      fontFamily: "'Cinzel', serif",
-      color: "#F3D231",
+      fontFamily: "'Cinzel',serif",
+      color: C.oro,
       fontWeight: 900,
-      fontSize: 28,
-      margin: "14px 0 2px",
-      textShadow: "0 2px 10px rgba(0,0,0,0.5)"
-    }
-  }, "Corteo Storico 2026"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontFamily: "'Cinzel', serif",
-      color: "#FFF",
-      fontSize: 14,
-      letterSpacing: "0.25em",
-      textTransform: "uppercase",
-      marginBottom: 26
-    }
-  }, "Porta San Benedetto"), /*#__PURE__*/React.createElement("input", {
-    type: "password",
-    value: pwd,
-    autoFocus: true,
-    onChange: e => {
-      setPwd(e.target.value);
-      setErr(false);
-    },
-    onKeyDown: e => e.key === "Enter" && prova(),
-    placeholder: "Parola d'ordine",
-    style: {
-      width: "100%",
-      boxSizing: "border-box",
-      padding: "14px 16px",
-      fontSize: 18,
-      textAlign: "center",
-      borderRadius: 6,
-      outline: "none",
-      border: err ? "2px solid #C0392B" : "2px solid #C9A622",
-      background: "#FFFDF5",
-      fontFamily: "'EB Garamond', Georgia, serif"
-    }
-  }), err && /*#__PURE__*/React.createElement("div", {
-    style: {
-      color: "#FFB3A7",
+      fontSize: "clamp(20px,4vw,32px)",
       marginTop: 10,
+      textShadow: "0 2px 8px rgba(0,0,0,0.5)"
+    }
+  }, "Tesseramento 2026"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: "'Cinzel',serif",
+      color: "#FFF",
+      fontSize: 13,
+      letterSpacing: "0.22em",
+      textTransform: "uppercase",
+      marginTop: 4
+    }
+  }, "Porta San Benedetto")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      justifyContent: "center",
+      gap: 12,
+      flexWrap: "wrap",
+      padding: "0 16px",
+      marginBottom: 22
+    }
+  }, [["Soci richiesti", tesserati.length], ["Accettati", `${accettati} / ${tesserati.length}`]].map(([t, v]) => /*#__PURE__*/React.createElement("div", {
+    key: t,
+    style: {
+      background: "rgba(0,0,0,0.25)",
+      border: `1px solid ${C.oroScuro}`,
+      borderRadius: 6,
+      padding: "8px 18px",
+      textAlign: "center",
+      minWidth: 130
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: "'Cinzel',serif",
+      color: C.oro,
+      fontSize: 22,
+      fontWeight: 700
+    }
+  }, v), /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: "rgba(255,255,255,0.75)",
+      fontSize: 12,
+      textTransform: "uppercase",
+      letterSpacing: "0.13em"
+    }
+  }, t)))), /*#__PURE__*/React.createElement("main", {
+    style: {
+      maxWidth: 980,
+      margin: "0 auto",
+      padding: "0 16px"
+    }
+  }, /*#__PURE__*/React.createElement("section", {
+    style: {
+      background: `linear-gradient(180deg,${C.pergamena},${C.pergamenaScura})`,
+      border: `3px solid ${C.oroScuro}`,
+      outline: `1px solid ${C.bluScuro}`,
+      outlineOffset: -7,
+      borderRadius: 8,
+      padding: "24px 22px 20px",
+      boxShadow: "0 12px 36px rgba(0,0,0,0.4)",
+      marginBottom: 28
+    }
+  }, /*#__PURE__*/React.createElement("h2", {
+    style: {
+      fontFamily: "'Cinzel',serif",
+      color: C.bluScuro,
+      margin: "0 0 4px",
+      fontSize: 20,
+      fontWeight: 700
+    }
+  }, editTesId ? "Modifica tesserato" : "Nuova richiesta di tesseramento"), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "0 0 16px",
+      color: "#6B5D3F",
       fontStyle: "italic"
     }
-  }, "Parola d'ordine errata."), /*#__PURE__*/React.createElement("button", {
-    onClick: prova,
+  }, "Dati del genitore/tutore e del minore."), /*#__PURE__*/React.createElement("div", {
     style: {
-      marginTop: 16,
-      width: "100%",
-      padding: "13px",
-      background: "#F3D231",
-      color: "#1A2B5C",
-      border: "2px solid #C9A622",
-      borderRadius: 6,
-      fontFamily: "'Cinzel', serif",
-      fontWeight: 900,
-      fontSize: 16,
-      letterSpacing: "0.08em",
+      display: "grid",
+      gap: 14,
+      gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))",
+      marginBottom: 14
+    }
+  }, /*#__PURE__*/React.createElement(Field, {
+    label: "Tipo presentazione"
+  }, /*#__PURE__*/React.createElement("select", {
+    style: inpS,
+    value: formTes.tipo,
+    onChange: onChangeTes("tipo")
+  }, /*#__PURE__*/React.createElement("option", {
+    value: "telematica"
+  }, "Telematica"), /*#__PURE__*/React.createElement("option", {
+    value: "fisica"
+  }, "Fisica"))), /*#__PURE__*/React.createElement(Field, {
+    label: "Tessera N\xB0"
+  }, /*#__PURE__*/React.createElement("input", {
+    style: inpS,
+    value: formTes.tesseraN,
+    onChange: onChangeTes("tesseraN"),
+    placeholder: "Es. 124"
+  }))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: "'Cinzel',serif",
+      fontWeight: 700,
+      fontSize: 13,
+      color: C.bluScuro,
+      marginBottom: 10,
+      borderBottom: `2px solid ${C.oroScuro}`,
+      paddingBottom: 4
+    }
+  }, "Genitore / Tutore"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gap: 14,
+      gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))",
+      marginBottom: 16
+    }
+  }, /*#__PURE__*/React.createElement(Field, {
+    label: "Nome e cognome *"
+  }, /*#__PURE__*/React.createElement("input", {
+    style: inpS,
+    value: formTes.gNome,
+    onChange: onChangeTes("gNome"),
+    placeholder: "Es. Mario Rossi"
+  })), /*#__PURE__*/React.createElement(Field, {
+    label: "Nato/a a"
+  }, /*#__PURE__*/React.createElement("input", {
+    style: inpS,
+    value: formTes.gNatoA,
+    onChange: onChangeTes("gNatoA"),
+    placeholder: "Gualdo Tadino"
+  })), /*#__PURE__*/React.createElement(Field, {
+    label: "Data di nascita"
+  }, /*#__PURE__*/React.createElement("input", {
+    style: inpS,
+    type: "date",
+    value: formTes.gNatoIl,
+    onChange: onChangeTes("gNatoIl")
+  })), /*#__PURE__*/React.createElement(Field, {
+    label: "Citt\xE0 di residenza"
+  }, /*#__PURE__*/React.createElement("input", {
+    style: inpS,
+    value: formTes.gResidenza,
+    onChange: onChangeTes("gResidenza"),
+    placeholder: "Gualdo Tadino"
+  })), /*#__PURE__*/React.createElement(Field, {
+    label: "Via / indirizzo"
+  }, /*#__PURE__*/React.createElement("input", {
+    style: inpS,
+    value: formTes.gVia,
+    onChange: onChangeTes("gVia"),
+    placeholder: "Via Roma 1"
+  })), /*#__PURE__*/React.createElement(Field, {
+    label: "Prov."
+  }, /*#__PURE__*/React.createElement("input", {
+    style: {
+      ...inpS,
+      textTransform: "uppercase"
+    },
+    maxLength: 2,
+    value: formTes.gProv,
+    onChange: onChangeTes("gProv"),
+    placeholder: "PG"
+  })), /*#__PURE__*/React.createElement(Field, {
+    label: "Codice fiscale"
+  }, /*#__PURE__*/React.createElement("input", {
+    style: {
+      ...inpS,
+      textTransform: "uppercase"
+    },
+    maxLength: 16,
+    value: formTes.gCF,
+    onChange: e => setFormTes(f => ({
+      ...f,
+      gCF: e.target.value.toUpperCase()
+    })),
+    placeholder: "RSSMRA60M01L117X"
+  })), /*#__PURE__*/React.createElement(Field, {
+    label: "Telefono"
+  }, /*#__PURE__*/React.createElement("input", {
+    style: inpS,
+    type: "tel",
+    value: formTes.gTel,
+    onChange: onChangeTes("gTel"),
+    placeholder: "+39 333 1234567"
+  })), /*#__PURE__*/React.createElement(Field, {
+    label: "Email"
+  }, /*#__PURE__*/React.createElement("input", {
+    style: inpS,
+    type: "email",
+    value: formTes.gMail,
+    onChange: onChangeTes("gMail"),
+    placeholder: "mario@email.it"
+  }))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: "'Cinzel',serif",
+      fontWeight: 700,
+      fontSize: 13,
+      color: C.bluScuro,
+      marginBottom: 10,
+      borderBottom: `2px solid ${C.oroScuro}`,
+      paddingBottom: 4
+    }
+  }, "Dati del minore"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gap: 14,
+      gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))"
+    }
+  }, /*#__PURE__*/React.createElement(Field, {
+    label: "Nome"
+  }, /*#__PURE__*/React.createElement("input", {
+    style: inpS,
+    value: formTes.mNome,
+    onChange: onChangeTes("mNome"),
+    placeholder: "Es. Sofia"
+  })), /*#__PURE__*/React.createElement(Field, {
+    label: "Cognome"
+  }, /*#__PURE__*/React.createElement("input", {
+    style: inpS,
+    value: formTes.mCognome,
+    onChange: onChangeTes("mCognome"),
+    placeholder: "Es. Rossi"
+  })), /*#__PURE__*/React.createElement(Field, {
+    label: "Nato/a a"
+  }, /*#__PURE__*/React.createElement("input", {
+    style: inpS,
+    value: formTes.mNatoA,
+    onChange: onChangeTes("mNatoA"),
+    placeholder: "Gualdo Tadino"
+  })), /*#__PURE__*/React.createElement(Field, {
+    label: "Data di nascita"
+  }, /*#__PURE__*/React.createElement("input", {
+    style: inpS,
+    type: "date",
+    value: formTes.mNatoIl,
+    onChange: onChangeTes("mNatoIl")
+  }))), errTes && /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 12,
+      padding: "10px 14px",
+      borderRadius: 4,
+      background: "#8E2B2B",
+      color: "#FFF"
+    }
+  }, errTes), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 10,
+      marginTop: 18,
+      flexWrap: "wrap"
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: inviaFormTes,
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 8,
+      background: C.bluScuro,
+      color: C.oro,
+      border: `2px solid ${C.oroScuro}`,
+      borderRadius: 5,
+      padding: "12px 22px",
+      fontFamily: "'Cinzel',serif",
+      fontWeight: 700,
+      fontSize: 15,
       cursor: "pointer"
     }
-  }, "Entra")));
+  }, /*#__PURE__*/React.createElement(UserPlus, {
+    size: 18
+  }), " ", editTesId ? "Salva modifiche" : "Registra richiesta"), editTesId && /*#__PURE__*/React.createElement("button", {
+    onClick: () => {
+      setFormTes(EMPTY_T);
+      setEditTesId(null);
+    },
+    style: {
+      background: "transparent",
+      color: C.bluScuro,
+      border: `2px solid ${C.bluScuro}`,
+      borderRadius: 5,
+      padding: "12px 16px",
+      fontFamily: "'Cinzel',serif",
+      fontWeight: 700,
+      fontSize: 14,
+      cursor: "pointer"
+    }
+  }, /*#__PURE__*/React.createElement(X, {
+    size: 16
+  }), " Annulla"))), /*#__PURE__*/React.createElement("section", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      flexWrap: "wrap",
+      gap: 12,
+      marginBottom: 16
+    }
+  }, /*#__PURE__*/React.createElement("h2", {
+    style: {
+      fontFamily: "'Cinzel',serif",
+      color: C.oro,
+      margin: 0,
+      fontSize: 20,
+      fontWeight: 700,
+      textShadow: "0 2px 6px rgba(0,0,0,0.4)"
+    }
+  }, "Registro soci"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "relative"
+    }
+  }, /*#__PURE__*/React.createElement(Search, {
+    size: 16,
+    color: C.oroScuro,
+    style: {
+      position: "absolute",
+      left: 10,
+      top: "50%",
+      transform: "translateY(-50%)"
+    }
+  }), /*#__PURE__*/React.createElement("input", {
+    value: filtroTes,
+    onChange: e => setFiltroTes(e.target.value),
+    placeholder: "Cerca per nome\u2026",
+    style: {
+      width: 200,
+      boxSizing: "border-box",
+      background: "#FFFDF5",
+      border: `1.5px solid ${C.oroScuro}`,
+      borderRadius: 4,
+      padding: "10px 12px 10px 32px",
+      fontFamily: "'EB Garamond',Georgia,serif",
+      fontSize: 15,
+      color: C.inchiostro,
+      outline: "none"
+    }
+  }))), caricamentoTes ? /*#__PURE__*/React.createElement("p", {
+    style: {
+      color: "rgba(255,255,255,0.8)",
+      fontStyle: "italic",
+      textAlign: "center"
+    }
+  }, "Caricamento\u2026") : visibiliTes.length === 0 ? /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: "center",
+      padding: "36px 20px",
+      border: `2px dashed ${C.oroScuro}`,
+      borderRadius: 8,
+      color: "rgba(255,255,255,0.8)",
+      fontStyle: "italic",
+      fontSize: 17
+    }
+  }, tesserati.length === 0 ? "Nessuna richiesta ancora registrata." : "Nessun risultato.") : /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gap: 10
+    }
+  }, visibiliTes.map((t, idx) => /*#__PURE__*/React.createElement("article", {
+    key: t.id,
+    style: {
+      background: C.pergamena,
+      border: `1.5px solid ${C.oroScuro}`,
+      borderLeft: `6px solid ${t.accettata ? "#2E7D32" : C.blu}`,
+      borderRadius: 6,
+      padding: "13px 15px",
+      boxShadow: "0 4px 14px rgba(0,0,0,0.25)"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      justifyContent: "space-between",
+      flexWrap: "wrap",
+      gap: 10
+    }
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: "'Cinzel',serif",
+      fontWeight: 700,
+      fontSize: 17,
+      color: C.bluScuro,
+      display: "flex",
+      alignItems: "center",
+      gap: 8,
+      flexWrap: "wrap"
+    }
+  }, idx + 1, ". ", t.gNome, t.tesseraN && /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 12,
+      color: "#7A6A45"
+    }
+  }, "Tessera n\xB0 ", t.tesseraN)), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 14,
+      color: C.inchiostro,
+      marginTop: 4,
+      display: "flex",
+      gap: "6px 14px",
+      flexWrap: "wrap"
+    }
+  }, (t.mNome || t.mCognome) && /*#__PURE__*/React.createElement("span", null, "\uD83D\uDC76 ", t.mNome, " ", t.mCognome), t.gMail && /*#__PURE__*/React.createElement("span", null, "\u2709 ", t.gMail), t.gTel && /*#__PURE__*/React.createElement("span", null, "\uD83D\uDCDE ", t.gTel), /*#__PURE__*/React.createElement("span", null, t.tipo === "telematica" ? "🌐 Telematica" : "🏛 Fisica"))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      gap: 8,
+      alignItems: "flex-end"
+    }
+  }, /*#__PURE__*/React.createElement("label", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 8,
+      padding: "7px 12px",
+      borderRadius: 6,
+      border: `1.5px solid ${t.accettata ? "#2E7D32" : C.oroScuro}`,
+      background: t.accettata ? "rgba(46,125,50,0.1)" : "#FFFDF5",
+      fontFamily: "'Cinzel',serif",
+      fontSize: 13,
+      fontWeight: 700,
+      color: t.accettata ? "#2E7D32" : "#7A6A45",
+      cursor: "pointer"
+    }
+  }, /*#__PURE__*/React.createElement("input", {
+    type: "checkbox",
+    checked: !!t.accettata,
+    onChange: () => salvaTes({
+      ...t,
+      accettata: !t.accettata
+    }),
+    style: {
+      width: 19,
+      height: 19,
+      accentColor: "#2E7D32",
+      cursor: "pointer",
+      margin: 0
+    }
+  }), "Accettata"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 6
+    }
+  }, t.gTel && /*#__PURE__*/React.createElement("a", {
+    href: `https://wa.me/${telWhatsApp(t.gTel)}?text=${encodeURIComponent(`Ciao ${t.gNome.split(" ")[0]}! La richiesta di tesseramento 2026 di ${t.mNome} ${t.mCognome} per Porta San Benedetto è stata accettata. Ti aspettiamo! 💛💙`)}`,
+    target: "_blank",
+    rel: "noreferrer",
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 5,
+      background: "#1FAF54",
+      border: "1.5px solid #157A3A",
+      color: "#FFF",
+      borderRadius: 5,
+      padding: "6px 10px",
+      fontFamily: "'Cinzel',serif",
+      fontWeight: 700,
+      fontSize: 12,
+      textDecoration: "none"
+    }
+  }, /*#__PURE__*/React.createElement(Send, {
+    size: 13
+  }), " WA"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setStampaTes(t.id),
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 5,
+      background: C.bluScuro,
+      border: `1.5px solid ${C.oroScuro}`,
+      color: C.oro,
+      borderRadius: 5,
+      padding: "6px 10px",
+      fontFamily: "'Cinzel',serif",
+      fontWeight: 700,
+      fontSize: 12,
+      cursor: "pointer"
+    }
+  }, /*#__PURE__*/React.createElement(Printer, {
+    size: 13
+  }), " Modulo"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => {
+      setFormTes({
+        ...EMPTY_T,
+        ...t
+      });
+      setEditTesId(t.id);
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
+    },
+    style: {
+      background: "transparent",
+      border: `1.5px solid ${C.bluScuro}`,
+      color: C.bluScuro,
+      borderRadius: 5,
+      padding: "6px 9px",
+      cursor: "pointer"
+    }
+  }, /*#__PURE__*/React.createElement(Pencil, {
+    size: 14
+  })), /*#__PURE__*/React.createElement("button", {
+    onClick: () => {
+      if (window.confirm(`Eliminare ${t.gNome}?`)) eliminaTes(t.id);
+    },
+    style: {
+      background: "transparent",
+      border: "1.5px solid #8E2B2B",
+      color: "#8E2B2B",
+      borderRadius: 5,
+      padding: "6px 9px",
+      cursor: "pointer"
+    }
+  }, /*#__PURE__*/React.createElement(Trash2, {
+    size: 14
+  }))))))))), /*#__PURE__*/React.createElement("footer", {
+    style: {
+      textAlign: "center",
+      marginTop: 40
+    }
+  }, /*#__PURE__*/React.createElement("p", {
+    style: {
+      color: "rgba(255,255,255,0.55)",
+      fontStyle: "italic",
+      fontSize: 14
+    }
+  }, "Porta San Benedetto \u2014 Gualdo Tadino"))), daStar && /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "fixed",
+      inset: 0,
+      zIndex: 100,
+      background: "rgba(0,0,0,0.7)",
+      display: "flex",
+      alignItems: "flex-start",
+      justifyContent: "center",
+      padding: "24px 10px",
+      overflowY: "auto"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: "100%",
+      maxWidth: 820
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "no-stampa",
+    style: {
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 10,
+      gap: 10
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: "#FFF",
+      fontFamily: "'Cinzel',serif",
+      fontWeight: 700
+    }
+  }, "Tesseramento \u2014 ", daStar.gNome), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 8
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => window.print(),
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 8,
+      background: C.oro,
+      color: C.bluNotte,
+      border: `2px solid ${C.oroScuro}`,
+      borderRadius: 5,
+      padding: "10px 20px",
+      fontFamily: "'Cinzel',serif",
+      fontWeight: 700,
+      fontSize: 14,
+      cursor: "pointer"
+    }
+  }, /*#__PURE__*/React.createElement(Printer, {
+    size: 17
+  }), " Stampa"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setStampaTes(null),
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 6,
+      background: "transparent",
+      color: "#FFF",
+      border: "2px solid #FFF",
+      borderRadius: 5,
+      padding: "10px 16px",
+      fontFamily: "'Cinzel',serif",
+      fontWeight: 700,
+      fontSize: 14,
+      cursor: "pointer"
+    }
+  }, /*#__PURE__*/React.createElement(X, {
+    size: 16
+  }), " Chiudi"))), /*#__PURE__*/React.createElement("div", {
+    className: "area-stampa",
+    style: {
+      borderRadius: 6,
+      overflow: "hidden",
+      boxShadow: "0 20px 60px rgba(0,0,0,0.6)"
+    }
+  }, /*#__PURE__*/React.createElement(ModuloTesseraPrint, {
+    p: daStar
+  })))), avvisoTes && /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "fixed",
+      bottom: 22,
+      left: "50%",
+      transform: "translateX(-50%)",
+      background: C.bluNotte,
+      color: C.oro,
+      border: `2px solid ${C.oro}`,
+      borderRadius: 6,
+      padding: "12px 22px",
+      fontFamily: "'Cinzel',serif",
+      fontWeight: 700,
+      fontSize: 14,
+      boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
+      zIndex: 200
+    }
+  }, avvisoTes));
 }
-function App() {
-  const [sbloccata, setSbloccata] = useState(() => localStorage.getItem("psb-accesso") === "ok");
-  if (!sbloccata) {
-    return /*#__PURE__*/React.createElement(SchermataAccesso, {
-      onSblocco: () => {
-        localStorage.setItem("psb-accesso", "ok");
-        setSbloccata(true);
-      }
-    });
-  }
-  return /*#__PURE__*/React.createElement(CorteoApp, null);
+
+// ==================================================================
+// APP ROOT con tab Corteo / Tesseramento
+// ==================================================================
+function AppRoot() {
+  const [sezione, setSezione] = useState("corteo");
+  return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      justifyContent: "center",
+      background: "rgba(0,0,0,0.4)",
+      borderBottom: `2px solid ${C.oroScuro}`,
+      position: "sticky",
+      top: 0,
+      zIndex: 50
+    }
+  }, [["corteo", "⚔ Corteo Storico"], ["tessere", "📜 Tesseramento"]].map(([s, label]) => /*#__PURE__*/React.createElement("button", {
+    key: s,
+    onClick: () => setSezione(s),
+    style: {
+      flex: 1,
+      maxWidth: 300,
+      padding: "14px 10px",
+      background: sezione === s ? C.oro : "transparent",
+      color: sezione === s ? C.bluNotte : "rgba(255,255,255,0.85)",
+      border: "none",
+      fontFamily: "'Cinzel',serif",
+      fontWeight: 900,
+      fontSize: 15,
+      letterSpacing: "0.08em",
+      cursor: "pointer",
+      borderBottom: sezione === s ? `3px solid ${C.oroScuro}` : "3px solid transparent"
+    }
+  }, label))), sezione === "corteo" ? /*#__PURE__*/React.createElement(CorteoApp, null) : /*#__PURE__*/React.createElement(SezioneTestera, null));
 }
 
 
-
-  
-
-// ── Render ───────────────────────────────────────────────────────
-createRoot(document.getElementById("root")).render(React.createElement(App));
+createRoot(document.getElementById("root")).render(React.createElement(AppRoot));
 </script>
 </body>
 </html>
