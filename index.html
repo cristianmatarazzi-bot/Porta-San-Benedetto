@@ -7,7 +7,7 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 120'%3E%3Cpath d='M5 5h90v60q0 35-45 50Q5 100 5 65z' fill='%23F3D231' stroke='%23C9A622' stroke-width='4'/%3E%3Crect x='12' y='12' width='76' height='40' fill='%2334509E'/%3E%3C/svg%3E"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-html,body{margin:0;padding:0;}#root{min-height:100vh;}
+html,body{margin:0;padding:0;background:#34509E;}#root{min-height:100vh;}
 @media print{body *{visibility:hidden!important;}.area-stampa,.area-stampa *{visibility:visible!important;}.area-stampa{position:absolute!important;inset:0!important;width:100%!important;background:#FFF!important;}.no-stampa{display:none!important;}}
 </style>
 </head>
@@ -21,7 +21,6 @@ import { getDatabase, ref, set, remove, onValue } from "https://www.gstatic.com/
 
 const { useState, useEffect, useCallback } = React;
 
-/* ── Configurazione (modifica qui) ─────────────────────────────── */
 const PASSWORD_APP = "Benedetto2026";
 const firebaseConfig = {
   apiKey: "AIzaSyAqK6cHiwNDZc7a6uiT-RStIzj37EkLBHI",
@@ -34,7 +33,6 @@ const firebaseConfig = {
 };
 const COLLEZIONE   = "corteo-psb-2026";
 const COLL_TESSERE = "tessere-psb-2026";
-/* ─────────────────────────────────────────────────────────────── */
 
 const _fbApp = initializeApp(firebaseConfig);
 const _fbDb  = getDatabase(_fbApp);
@@ -1913,8 +1911,7 @@ export default function CorteoApp() {
     style: {
       minHeight: "100vh",
       background: `
-        repeating-linear-gradient(135deg, rgba(243,210,49,0.045) 0 18px, transparent 18px 36px),
-        linear-gradient(180deg, ${C.bluNotte} 0%, ${C.blu} 55%, ${C.bluScuro} 100%)`,
+        ${C.blu}`,
       fontFamily: "'EB Garamond', Georgia, serif",
       paddingBottom: 60
     }
@@ -3825,8 +3822,7 @@ function SchermataAccesso({
       alignItems: "center",
       justifyContent: "center",
       padding: 20,
-      background: `repeating-linear-gradient(135deg,rgba(243,210,49,0.045) 0 18px,transparent 18px 36px),
-        linear-gradient(180deg,${C.bluNotte} 0%,${C.blu} 55%,${C.bluScuro} 100%)`,
+      background: `${C.blu}`,
       fontFamily: "'EB Garamond',Georgia,serif"
     }
   }, /*#__PURE__*/React.createElement("style", null, "@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=EB+Garamond:ital@0;1&display=swap');"), /*#__PURE__*/React.createElement("div", {
