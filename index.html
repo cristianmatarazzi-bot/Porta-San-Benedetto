@@ -21,7 +21,10 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/fireba
 import { getDatabase, ref, set, remove, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 const { useState, useEffect, useCallback } = React;
+console.log("React caricato:", React.version);
 const XLSX = window.XLSX;
+if (!XLSX) console.error("XLSX non caricato — controllare CDN");
+else console.log("XLSX caricato ok, versione:", XLSX.version);
 
 const PASSWORD_APP = "Benedetto2026";
 const firebaseConfig = {
@@ -1785,9 +1788,12 @@ export default function CorteoApp() {
   }, []);
   const salvaPersona = useCallback(async p => {
     try {
-      await db.ref(COLLEZIONE + "/" + p.id).set(p);
+      const daPulire = Object.fromEntries(Object.entries(p).filter(([_,v]) => v !== undefined && v !== null));
+      console.log("Salvo corteo:", daPulire);
+      await db.ref(COLLEZIONE + "/" + p.id).set(daPulire);
+      console.log("Corteo salvato ok ✓");
     } catch (e) {
-      console.error("Firebase write error:", e);
+      console.error("Firebase corteo error:", e.code, e.message, e);
       const msg = e && e.code ? e.code + ": " + e.message : String(e);
       setErrore("Errore Firebase: " + msg);
       setTimeout(() => setErrore(""), 10000);
@@ -3161,10 +3167,14 @@ function SezioneTestera() {
   }));
   const salvaTes = useCallback(async rec => {
     try {
-      await db.ref(COLL_TESSERE + "/" + rec.id).set(rec);
-    } catch {
-      setErrTes("Salvataggio non riuscito.");
-      setTimeout(() => setErrTes(""), 4000);
+      const daPulireTes = Object.fromEntries(Object.entries(rec).filter(([_,v]) => v !== undefined && v !== null));
+      console.log("Salvo tessera:", daPulireTes);
+      await db.ref(COLL_TESSERE + "/" + rec.id).set(daPulireTes);
+      console.log("Tessera salvata ok ✓");
+    } catch (e) {
+      console.error("Firebase tessera error:", e.code, e.message, e);
+      setErrTes("Errore: " + (e && e.code ? e.code : String(e)));
+      setTimeout(() => setErrTes(""), 8000);
     }
   }, []);
   const eliminaTes = async id => {
