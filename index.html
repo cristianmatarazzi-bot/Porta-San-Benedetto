@@ -38,18 +38,61 @@ const COLL_TESSERE = "tessere-psb-2026";
 
 const _fbApp = initializeApp(firebaseConfig);
 const _fbDb  = getDatabase(_fbApp);
+
+// Wrapper db compatibile con il codice compilato
 const db = {
   ref: (path) => {
-    const r = ref(_fbDb, path);
-    const subs = [];
+    const dbRef = ref(_fbDb, path);
+    const unsubs = [];
     return {
-      on:     (_, cb, err) => { const u = onValue(r, cb, err||(()=>{})); subs.push(u); return u; },
-      off:    ()           => subs.forEach(u => u && u()),
-      set:    (v)          => set(r, v),
-      remove: ()           => remove(r),
+      on: (_, cb, errCb) => {
+        const unsub = onValue(dbRef, cb, errCb || (() => {}));
+        unsubs.push(unsub);
+        return unsub;
+      },
+      off: () => { unsubs.forEach(u => { if (typeof u === 'function') u(); }); },
+      set: async (val) => {
+        try {
+          await set(dbRef, val);
+        } catch(e) {
+          console.error("db.ref.set error:", e.code, e.message);
+          throw e;
+        }
+      },
+      remove: async () => {
+        try {
+          await remove(dbRef);
+        } catch(e) {
+          console.error("db.ref.remove error:", e.code, e.message);
+          throw e;
+        }
+      },
     };
   }
 };
+
+// Test connessione + scrittura Firebase al caricamento
+(async () => {
+  try {
+    // Test 1: connessione
+    const connRef = ref(_fbDb, ".info/connected");
+    onValue(connRef, (snap) => {
+      console.log("Firebase connesso:", snap.val());
+    });
+    // Test 2: scrittura di prova nel ramo _test (poi la eliminiamo)
+    const testRef = ref(_fbDb, "_test/ping");
+    await set(testRef, { ts: Date.now(), ok: true });
+    console.log("Firebase SCRITTURA ok ✓");
+    await remove(testRef);
+  } catch(e) {
+    console.error("Firebase ERRORE:", e.code, e.message);
+    // Mostra alert visibile anche senza console aperta
+    const div = document.createElement("div");
+    div.style.cssText = "position:fixed;top:0;left:0;right:0;z-index:9999;background:#C0392B;color:#FFF;padding:14px;font-family:monospace;font-size:13px;text-align:center;";
+    div.textContent = "Firebase errore: " + (e.code || "") + " — " + (e.message || e);
+    document.body.appendChild(div);
+  }
+})();
 
 function faIcona(p){return function I({size=16,color="currentColor",style}){return React.createElement("svg",{width:size,height:size,viewBox:"0 0 24 24",fill:"none",stroke:color,strokeWidth:"2",strokeLinecap:"round",strokeLinejoin:"round",style:{flexShrink:0,...style},dangerouslySetInnerHTML:{__html:p}});};}
 const UserPlus=faIcona('<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" x2="19" y1="8" y2="14"/><line x1="22" x2="16" y1="11" y2="11"/>');
@@ -89,7 +132,6 @@ function Stemma({
     fillRule: "evenodd"
   }));
 }
-const STORAGE_KEY = "corteo-psb-iscritti";
 const GIORNI = {
   venerdi: {
     tab: "Venerdì 25",
@@ -1722,31 +1764,40 @@ export default function CorteoApp() {
   const [errore, setErrore] = useState("");
   const [stampaId, setStampaId] = useState(null);
   useEffect(() => {
-    (async () => {
-      try {
-        const res = await window.storage.get(STORAGE_KEY, true);
-        if (res && res.value) {
-          let lista = JSON.parse(res.value);
-          // migrazione: i vecchi iscritti senza giorno vanno nel sabato (corteo principale)
-          lista = lista.map(p => p.giorno ? p : {
-            ...p,
-            giorno: "sabato"
-          });
-          setIscritti(lista);
-        }
-      } catch (e) {
-        // registro vuoto al primo avvio
-      } finally {
-        setCaricamento(false);
-      }
-    })();
+    const rif = db.ref(COLLEZIONE);
+    const cb = rif.on("value", snap => {
+      const dati = snap.val() || {};
+      let lista = Object.keys(dati).map(k => ({
+        ...dati[k],
+        id: k
+      }));
+      lista = lista.map(p => p.giorno ? p : {
+        ...p,
+        giorno: "sabato"
+      });
+      lista.sort((a, b) => (a.creato || 0) - (b.creato || 0));
+      setIscritti(lista);
+      setCaricamento(false);
+    }, () => {
+      setCaricamento(false);
+    });
+    return () => rif.off("value", cb);
   }, []);
-  const salva = useCallback(async lista => {
-    setIscritti(lista);
+  const salvaPersona = useCallback(async p => {
     try {
-      await window.storage.set(STORAGE_KEY, JSON.stringify(lista), true);
+      await db.ref(COLLEZIONE + "/" + p.id).set(p);
     } catch (e) {
-      setErrore("Salvataggio non riuscito. Riprova.");
+      console.error("Firebase write error:", e);
+      const msg = e && e.code ? e.code + ": " + e.message : String(e);
+      setErrore("Errore Firebase: " + msg);
+      setTimeout(() => setErrore(""), 10000);
+    }
+  }, []);
+  const eliminaPersona = useCallback(async id => {
+    try {
+      await db.ref(COLLEZIONE + "/" + id).remove();
+    } catch (e) {
+      setErrore("Eliminazione non riuscita. Riprova.");
       setTimeout(() => setErrore(""), 4000);
     }
   }, []);
@@ -1781,19 +1832,22 @@ export default function CorteoApp() {
       telefono: normalizzaTelefono(form.telefono)
     };
     if (editId) {
-      salva(iscritti.map(p => p.id === editId ? {
+      const orig = iscritti.find(p => p.id === editId);
+      salvaPersona({
         ...dati,
         id: editId,
-        giorno: p.giorno
-      } : p));
+        giorno: orig ? orig.giorno : giorno,
+        creato: orig && orig.creato || Date.now()
+      });
       setEditId(null);
       mostraAvviso("Iscritto aggiornato.");
     } else {
-      salva([...iscritti, {
+      salvaPersona({
         ...dati,
         id: Date.now().toString(36),
-        giorno
-      }]);
+        giorno,
+        creato: Date.now()
+      });
       mostraAvviso(`${form.nome} ${form.cognome} iscritto a ${GIORNI[giorno].tab}.`);
     }
     setForm(EMPTY);
@@ -1816,13 +1870,14 @@ export default function CorteoApp() {
   const elimina = id => {
     const p = iscritti.find(x => x.id === id);
     if (!window.confirm(`Eliminare ${p.nome} ${p.cognome} dall'elenco di ${GIORNI[p.giorno].tab}?`)) return;
-    salva(iscritti.filter(x => x.id !== id));
+    eliminaPersona(id);
   };
   const toggle = (id, campo) => {
-    salva(iscritti.map(p => p.id === id ? {
+    const p = iscritti.find(x => x.id === id);
+    if (p) salvaPersona({
       ...p,
       [campo]: !p[campo]
-    } : p));
+    });
   };
 
   // ---- Tracciamento ultima esportazione ----
