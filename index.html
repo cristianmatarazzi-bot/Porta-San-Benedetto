@@ -2081,6 +2081,7 @@ export default function CorteoApp() {
   var visibili = delGiorno.filter(function (p) {
     return "".concat(p.nome, " ").concat(p.cognome).toLowerCase().includes(filtro.toLowerCase());
   });
+  var ancheNelSabato = giorno !== "sabato" ? delGiorno.filter(function (p) { return p.nelSabato; }).length : null;
   var pagati = delGiorno.filter(function (p) {
     return p.pagamento;
   }).length;
