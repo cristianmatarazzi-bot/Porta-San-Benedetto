@@ -18,6 +18,24 @@ html,body{margin:0;padding:0;background:#34509E;}#root{min-height:100vh;}
 </head>
 <body>
 <div id="root"></div>
+<div id="errore-box" style="display:none;position:fixed;inset:0;background:#1a1a2e;color:#fff;padding:30px;font-family:monospace;font-size:14px;z-index:9999;overflow:auto;"></div>
+<script>
+window.onerror = function(msg, src, line, col, err) {
+  var box = document.getElementById('errore-box');
+  box.style.display = 'block';
+  box.innerHTML = '<strong style="color:#F3D231;font-size:18px">ERRORE JAVASCRIPT</strong><br><br>' +
+    '<b>Messaggio:</b> ' + msg + '<br>' +
+    '<b>File:</b> ' + src + '<br>' +
+    '<b>Riga:</b> ' + line + ', Col: ' + col + '<br><br>' +
+    (err && err.stack ? '<b>Stack:</b><br><pre style="white-space:pre-wrap;color:#aaa">' + err.stack + '</pre>' : '');
+};
+window.addEventListener('unhandledrejection', function(e) {
+  var box = document.getElementById('errore-box');
+  box.style.display = 'block';
+  box.innerHTML += '<br><strong style="color:#F3D231">PROMISE RIFIUTATA</strong><br>' +
+    (e.reason ? (e.reason.stack || e.reason.message || String(e.reason)) : String(e));
+});
+</script>
 <script type="module">
 import React from "https://esm.sh/react@18.3.1";
 import { createRoot } from "https://esm.sh/react-dom@18.3.1/client";
