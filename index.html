@@ -20,21 +20,8 @@ html,body{margin:0;padding:0;background:#34509E;}#root{min-height:100vh;}
 <div id="root"></div>
 <div id="errore-box" style="display:none;position:fixed;inset:0;background:#1a1a2e;color:#fff;padding:30px;font-family:monospace;font-size:14px;z-index:9999;overflow:auto;"></div>
 <script>
-window.onerror = function(msg, src, line, col, err) {
-  var box = document.getElementById('errore-box');
-  box.style.display = 'block';
-  box.innerHTML = '<strong style="color:#F3D231;font-size:18px">ERRORE JAVASCRIPT</strong><br><br>' +
-    '<b>Messaggio:</b> ' + msg + '<br>' +
-    '<b>File:</b> ' + src + '<br>' +
-    '<b>Riga:</b> ' + line + ', Col: ' + col + '<br><br>' +
-    (err && err.stack ? '<b>Stack:</b><br><pre style="white-space:pre-wrap;color:#aaa">' + err.stack + '</pre>' : '');
-};
-window.addEventListener('unhandledrejection', function(e) {
-  var box = document.getElementById('errore-box');
-  box.style.display = 'block';
-  box.innerHTML += '<br><strong style="color:#F3D231">PROMISE RIFIUTATA</strong><br>' +
-    (e.reason ? (e.reason.stack || e.reason.message || String(e.reason)) : String(e));
-});
+window.onerror=function(msg,src,line,col,err){var b=document.getElementById('errore-box');b.style.display='block';b.innerHTML='<strong style="color:#F3D231;font-size:18px">ERRORE</strong><br><br><b>Messaggio:</b> '+msg+'<br><b>Riga:</b> '+line+'<br><br>'+(err&&err.stack?'<pre style="white-space:pre-wrap;color:#aaa">'+err.stack+'</pre>':'');};
+window.addEventListener('unhandledrejection',function(e){var b=document.getElementById('errore-box');b.style.display='block';b.innerHTML+='<br><strong style="color:#F3D231">PROMISE ERROR</strong><br>'+(e.reason?e.reason.stack||e.reason.message||String(e.reason):String(e));});
 </script>
 <script type="module">
 import React from "https://esm.sh/react@18.3.1";
@@ -1474,7 +1461,9 @@ var EMPTY = {
   autorizzaImmagini: false,
   pagamento: false,
   tessera: false,
-  nelSabato: false
+  nelSabato: false,
+  cauzione: false,
+  riconsegna: false
 };
 var C = {
   blu: "#34509E",
@@ -2013,6 +2002,8 @@ export default function CorteoApp() {
           "Genitore (per minori)": p.genitoreNome,
           "Autorizzazione immagini": p.autorizzaImmagini ? "Sì" : "No",
           "Nel corteo del sabato": p.giorno !== "sabato" ? p.nelSabato ? "Sì" : "No" : "—",
+          Cauzione: p.cauzione ? "Sì" : "No",
+          "Riconsegna abito": p.riconsegna ? "Sì" : "No",
           Pagamento: p.pagamento ? "Sì" : "No",
           Tessera: p.tessera ? "Sì" : "No"
         };
@@ -2060,6 +2051,12 @@ export default function CorteoApp() {
       }, {
         wch: 10
       }, {
+        wch: 12
+      }, {
+        wch: 14
+      }, {
+        wch: 10
+      }, {
         wch: 8
       }];
       XLSX.utils.book_append_sheet(wb, ws, GIORNI[g].foglio.substring(0, 31));
@@ -2081,7 +2078,6 @@ export default function CorteoApp() {
   var visibili = delGiorno.filter(function (p) {
     return "".concat(p.nome, " ").concat(p.cognome).toLowerCase().includes(filtro.toLowerCase());
   });
-  var ancheNelSabato = giorno !== "sabato" ? delGiorno.filter(function (p) { return p.nelSabato; }).length : null;
   var pagati = delGiorno.filter(function (p) {
     return p.pagamento;
   }).length;
@@ -2862,7 +2858,67 @@ export default function CorteoApp() {
           margin: 0
         }
       }), et);
-    }), giorno !== "sabato" && /*#__PURE__*/React.createElement("label", {
+    }), /*#__PURE__*/React.createElement("label", {
+      style: {
+        display: "flex",
+        alignItems: "center",
+        gap: 8,
+        padding: "7px 12px",
+        borderRadius: 6,
+        border: "1.5px solid ".concat(p.cauzione ? "#2E7D32" : "#AAA"),
+        background: p.cauzione ? "rgba(46,125,50,0.13)" : "#FFFDF5",
+        fontFamily: "'Cinzel', serif",
+        fontSize: 13,
+        fontWeight: 700,
+        color: p.cauzione ? "#2E7D32" : "#999",
+        cursor: "pointer",
+        userSelect: "none",
+        transition: "all 0.15s"
+      }
+    }, /*#__PURE__*/React.createElement("input", {
+      type: "checkbox",
+      checked: !!p.cauzione,
+      onChange: function onChange() {
+        return toggle(p.id, "cauzione");
+      },
+      style: {
+        width: 19,
+        height: 19,
+        accentColor: "#2E7D32",
+        cursor: "pointer",
+        margin: 0
+      }
+    }), "\uD83D\uDCB0 Cauzione"), /*#__PURE__*/React.createElement("label", {
+      style: {
+        display: "flex",
+        alignItems: "center",
+        gap: 8,
+        padding: "7px 12px",
+        borderRadius: 6,
+        border: "1.5px solid ".concat(p.riconsegna ? "#2E7D32" : "#C0392B"),
+        background: p.riconsegna ? "rgba(46,125,50,0.13)" : "rgba(192,57,43,0.08)",
+        fontFamily: "'Cinzel', serif",
+        fontSize: 13,
+        fontWeight: 700,
+        color: p.riconsegna ? "#2E7D32" : "#C0392B",
+        cursor: "pointer",
+        userSelect: "none",
+        transition: "all 0.15s"
+      }
+    }, /*#__PURE__*/React.createElement("input", {
+      type: "checkbox",
+      checked: !!p.riconsegna,
+      onChange: function onChange() {
+        return toggle(p.id, "riconsegna");
+      },
+      style: {
+        width: 19,
+        height: 19,
+        accentColor: "#2E7D32",
+        cursor: "pointer",
+        margin: 0
+      }
+    }), "\uD83D\uDC57 Riconsegna"), giorno !== "sabato" && /*#__PURE__*/React.createElement("label", {
       style: {
         display: "flex",
         alignItems: "center",
